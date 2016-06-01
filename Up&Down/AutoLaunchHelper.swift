@@ -9,68 +9,57 @@
 import Foundation
 public class AutoLaunchHelper {
     static func isLaunchWhenLogin() -> Bool {
-        return (itemReferencesInLoginItems().existingReference != nil)
+        return (loginItem() != nil)
     }
     
-    static func itemReferencesInLoginItems() -> (existingReference: LSSharedFileListItemRef?, lastReference: LSSharedFileListItemRef?) {
-        if let appUrl : NSURL = NSURL.fileURLWithPath(NSBundle.mainBundle().bundlePath) {
-            let loginItemsRef = LSSharedFileListCreate(
-                nil,
-                kLSSharedFileListSessionLoginItems.takeRetainedValue(),
-                nil
-                ).takeRetainedValue() as LSSharedFileListRef?
-            if loginItemsRef != nil {
-                let loginItems: NSArray = LSSharedFileListCopySnapshot(loginItemsRef, nil).takeRetainedValue() as NSArray
-                //print("There are \(loginItems.count) login items")
-                let lastItemRef: LSSharedFileListItemRef = loginItems.lastObject as! LSSharedFileListItemRef
-                for i in 0 ..< loginItems.count {
-                    let currentItemRef: LSSharedFileListItemRef = loginItems.objectAtIndex(i) as! LSSharedFileListItemRef
-                    
-                    if let resUrl = LSSharedFileListItemCopyResolvedURL(currentItemRef, 0, nil){
-                        let urlRef: NSURL = resUrl.takeRetainedValue()
-                        //print("URL Ref: \(urlRef.lastPathComponent!)")
-                        if urlRef.isEqual(appUrl) {
-                            return (currentItemRef, lastItemRef)
-                        }
-                    } else {
-                        //print("Unknown login application")
-                    }
+    static func removeFromLoginItems() {
+        guard let loginItem = loginItem() else { return }
+        let loginItemsFileList = LSSharedFileListCreate(nil,
+                                                        kLSSharedFileListSessionLoginItems.takeRetainedValue(),
+                                                        nil).takeRetainedValue() as LSSharedFileListRef?
+        LSSharedFileListItemRemove(loginItemsFileList, loginItem)
+        print("Application was removed from login items")
+    }
+    
+    static func addToLoginItems() {
+        let bundleURL = NSBundle.mainBundle().bundleURL
+        let loginItemsFileList = LSSharedFileListCreate(nil,
+                                                        kLSSharedFileListSessionLoginItems.takeRetainedValue(),
+                                                        nil).takeRetainedValue() as LSSharedFileListRef?
+        guard loginItemsFileList != nil else { return }
+        LSSharedFileListInsertItemURL(loginItemsFileList,
+                                      kLSSharedFileListItemBeforeFirst.takeRetainedValue(),
+                                      nil,
+                                      nil,
+                                      bundleURL,
+                                      nil,
+                                      nil)
+        print("Application was added to login items")
+    }
+    
+    static func loginItem() -> LSSharedFileListItemRef? {
+        let bundleURL = NSBundle.mainBundle().bundleURL
+        let loginItemsFileList = LSSharedFileListCreate(nil,
+                                                        kLSSharedFileListSessionLoginItems.takeRetainedValue(),
+                                                        nil).takeRetainedValue() as LSSharedFileListRef?
+        guard loginItemsFileList != nil else { return nil }
+        guard let loginItems: NSArray = LSSharedFileListCopySnapshot(loginItemsFileList, nil).takeRetainedValue() else { return nil }
+        
+        for loginItem in loginItems as! [LSSharedFileListItemRef] {
+            if let itemURL = LSSharedFileListItemCopyResolvedURL(loginItem, 0, nil).takeRetainedValue() as? NSURL {
+                if bundleURL.isEqual(itemURL) {
+                    return loginItem
                 }
-                //The application was not found in the startup list
-                return (nil, lastItemRef)
             }
         }
-        return (nil, nil)
+        return nil
     }
     
     static func toggleLaunchWhenLogin() {
-        let itemReferences = itemReferencesInLoginItems()
-        let shouldBeToggled = (itemReferences.existingReference == nil)
-        let loginItemsRef = LSSharedFileListCreate(
-            nil,
-            kLSSharedFileListSessionLoginItems.takeRetainedValue(),
-            nil
-            ).takeRetainedValue() as LSSharedFileListRef?
-        if loginItemsRef != nil {
-            if shouldBeToggled {
-                if let appUrl : CFURLRef = NSURL.fileURLWithPath(NSBundle.mainBundle().bundlePath) {
-                    LSSharedFileListInsertItemURL(
-                        loginItemsRef,
-                        itemReferences.lastReference,
-                        nil,
-                        nil,
-                        appUrl,
-                        nil,
-                        nil
-                    )
-                    print("Application was added to login items")
-                }
-            } else {
-                if let itemRef = itemReferences.existingReference {
-                    LSSharedFileListItemRemove(loginItemsRef,itemRef);
-                    print("Application was removed from login items")
-                }
-            }
+        if isLaunchWhenLogin() {
+            removeFromLoginItems()
+        } else {
+            addToLoginItems()
         }
     }
 }
