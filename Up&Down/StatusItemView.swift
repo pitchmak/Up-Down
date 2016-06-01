@@ -26,7 +26,7 @@ public class StatusItemView: NSControl {
     
     init(statusItem aStatusItem: NSStatusItem, menu aMenu: NSMenu) {
         statusItem = aStatusItem
-        super.init(frame: NSMakeRect(0, 0, statusItem.length, 30))
+        super.init(frame: NSRect(origin: CGPointZero, size: NSSize(width: statusItem.length, height: 30)))
         menu = aMenu
         menu?.delegate = self
         
@@ -45,12 +45,12 @@ public class StatusItemView: NSControl {
         fontColor = (darkMode||mouseDown) ? NSColor.whiteColor() : NSColor.blackColor()
         let fontAttributes = [NSFontAttributeName: NSFont.systemFontOfSize(fontSize), NSForegroundColorAttributeName: fontColor]
         
-        let upRateString = NSAttributedString.init(string: upRate+" ↑", attributes: fontAttributes)
-        let upRateRect = upRateString.boundingRectWithSize(NSSize.init(width: 100, height: 100), options: NSStringDrawingOptions.UsesLineFragmentOrigin)
+        let upRateString = NSAttributedString(string: upRate+" ↑", attributes: fontAttributes)
+        let upRateRect = upRateString.boundingRectWithSize(NSSize(width: 100, height: 100), options: .UsesLineFragmentOrigin)
         upRateString.drawAtPoint(NSMakePoint(bounds.width - upRateRect.width - 5, 10))
         
-        let downRateString = NSAttributedString.init(string: downRate+" ↓", attributes: fontAttributes)
-        let downRateRect = downRateString.boundingRectWithSize(NSSize.init(width: 100, height: 100), options: NSStringDrawingOptions.UsesLineFragmentOrigin)
+        let downRateString = NSAttributedString(string: downRate+" ↓", attributes: fontAttributes)
+        let downRateRect = downRateString.boundingRectWithSize(NSSize(width: 100, height: 100), options: .UsesLineFragmentOrigin)
         downRateString.drawAtPoint(NSMakePoint(bounds.width - downRateRect.width - 5, 0))
     }
     
@@ -90,18 +90,18 @@ public class StatusItemView: NSControl {
         }
         
         if result < 100 {
-            return String.init(format: "%0.2f", result) + unit
+            return String(format: "%0.2f", result) + unit
         }
         else if result < 999 {
-            return String.init(format: "%0.1f", result) + unit
+            return String(format: "%0.1f", result) + unit
         }
         else {
-            return String.init(format: "%0.0f", result) + unit
+            return String(format: "%0.0f", result) + unit
         }
     }
     
     func changeMode() {
-        darkMode = SystemThemeChangeHelper.isCurrentDark() ? true : false
+        darkMode = SystemThemeChangeHelper.isCurrentDark()
         setNeedsDisplay()
     }
 }

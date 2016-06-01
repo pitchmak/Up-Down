@@ -18,8 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     override init() {
         statusItem = NSStatusBar.systemStatusBar().statusItemWithLength(72)
         
-        menu = NSMenu.init()
-        autoLaunchMenu = NSMenuItem.init()
+        menu = NSMenu()
+        autoLaunchMenu = NSMenuItem()
         autoLaunchMenu.title = "Launch when login"
         autoLaunchMenu.state = AutoLaunchHelper.isLaunchWhenLogin() ? 1 : 0
         autoLaunchMenu.action = #selector(menuItemAutoLaunchClick)
@@ -28,7 +28,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItemWithTitle("About", action: #selector(menuItemAboutClick), keyEquivalent: "")
         menu.addItemWithTitle("Quit", action: #selector(menuItemQuitClick), keyEquivalent: "q")
         
-        statusItemView = StatusItemView.init(statusItem: statusItem, menu: menu)
+        statusItemView = StatusItemView(statusItem: statusItem, menu: menu)
         statusItem.view = statusItemView
     }
     
@@ -37,11 +37,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func updateRateData() {
-        let task = NSTask.init()
+        let task = NSTask()
         task.launchPath = "/usr/bin/sar"
         task.arguments = ["-n", "DEV", "1"]
         
-        let pipe = NSPipe.init()
+        let pipe = NSPipe()
         task.standardOutput = pipe
         
         task.launch()
@@ -53,7 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let fileHandle = pipe.fileHandleForReading
             let data = fileHandle.readDataToEndOfFile()
             
-            var string = String.init(data: data, encoding: NSUTF8StringEncoding)
+            var string = String(data: data, encoding: NSUTF8StringEncoding)
             string = string?.substringFromIndex((string?.rangeOfString("Aver")?.startIndex)!)
             handleData(string!)
         } else {
@@ -95,8 +95,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             var upRate: Float = 0
             var downRate: Float = 0
             for result in results {
-                downRate += Float.init((string as NSString).substringWithRange(result.rangeAtIndex(2)))!
-                upRate += Float.init((string as NSString).substringWithRange(result.rangeAtIndex(4)))!
+                downRate += Float((string as NSString).substringWithRange(result.rangeAtIndex(2)))!
+                upRate += Float((string as NSString).substringWithRange(result.rangeAtIndex(4)))!
             }
             statusItemView.setRateData(up: upRate, down: downRate)
             //test data
@@ -113,7 +113,7 @@ extension AppDelegate {
     }
     
     func menuItemAboutClick() {
-        let alert = NSAlert.init()
+        let alert = NSAlert()
         alert.messageText = "About Up&Down"
         alert.addButtonWithTitle("About Me")
         alert.addButtonWithTitle("Cancle")
@@ -121,11 +121,11 @@ extension AppDelegate {
         let result = alert.runModal()
         switch result {
         case NSAlertFirstButtonReturn:
-            Swift.print("About Me")
-            NSWorkspace.sharedWorkspace().openURL(NSURL.init(string: "https://github.com/gjiazhe/Up-Down")!)
+            print("About Me")
+            NSWorkspace.sharedWorkspace().openURL(NSURL(string: "https://github.com/gjiazhe/Up-Down")!)
             break
         default:
-            Swift.print("Cancel")
+            print("Cancel")
             break
         }
     }
